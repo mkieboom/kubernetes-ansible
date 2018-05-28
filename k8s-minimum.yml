@@ -51,13 +51,13 @@
 - name: Allow pods on master
   hosts: k8s-master
   roles:
-    - {role: k8s-install-allowpodsonmaster, when: allow_pods_on_master == true}
+    - {role: k8s-install-allowpodsonmaster, when: allow_pods_on_master == 'yes'}
 
 ## Deploy demo environment settings, not for production environments!
 - name: Deploy demo environment settings, not for production environments!
   hosts: k8s-master
   roles:
-    - {role: k8s-install-demo, when: demo_environment == true}
+    - {role: k8s-install-demo, when: demo_environment == 'yes'}
 
 ## Join worker nodes
 - name: Join worker nodes

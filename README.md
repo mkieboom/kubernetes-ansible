@@ -22,19 +22,19 @@ Specify the below configuration parameters
 vi group_vars/all
 ```
 
-# Allow running pods on master (true/false=default)
-allow_pods_on_master: false
+# Allow running pods on master (yes/no=default)
+allow_pods_on_master: 'no'
 
-# Deploy demo environment settings, not for production environments! (true/false=default)
-demo_environment: false
+# Deploy demo environment settings, not for production environments! (yes/no=default)
+demo_environment: 'no'
 
 
 
 #### Launch Ansible scripts:
-Example playbook command deploying a single secure node cluster with low memory config with no ecosystem packages:
+Example playbook command deploying a single node K8S environment allowing pods on master and no login required (not for production environments!):
 ```
 export ANSIBLE_HOST_KEY_CHECKING=False
-ansible-playbook -i myhosts/1node_cluster cluster-minimum.yml -e "memory=low" -e "secure=maprsasl"
+ansible-playbook -i myhosts/1node_cluster cluster-minimum.yml -e "allow_pods_on_master=yes" -e "demo_environment=yes"
 ```
 
 
