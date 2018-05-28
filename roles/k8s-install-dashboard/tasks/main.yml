@@ -1,0 +1,28 @@
+---
+  # Download Kubernetes Dashboard yaml
+  - name: Download Kubernetes Dashboard yaml
+    get_url:
+      url: "{{ dashboard_url }}"
+      dest: "/tmp/{{ dashboard_yaml }}"
+      force: yes
+
+  # Configure Kubernetes Dashboard yaml
+  - name: Configure Kubernetes Dashboard yaml (/tmp/{{ dashboard_yaml }})
+    blockinfile:
+      path: "/tmp/{{ dashboard_yaml }}"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      block: |
+        spec:
+          ports:
+            - port: 443
+              targetPort: 8443
+              nodePort: {{ dashboard_service_port }}
+          selector:
+            k8s-app: kubernetes-dashboard
+          type: {{ dashboard_service_type }}
+
+  # Install Dashboard
+  - name: Install Kubernetes Dashboard
+    shell: kubectl create -f /tmp/{{ dashboard_yaml }}
+    register: command_result
+    failed_when: "command_result.rc != 0 and 'already exists' not in command_result.stderr"

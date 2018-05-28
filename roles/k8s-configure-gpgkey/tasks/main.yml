@@ -1,0 +1,7 @@
+---
+# Add the Kubernetes Package key (GPG)
+  - name: Add Kubernetes GPG keys
+    rpm_key: key={{item}} state=present
+    with_items:
+      - "https://packages.cloud.google.com/yum/doc/yum-key.gpg"
+      - "https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"

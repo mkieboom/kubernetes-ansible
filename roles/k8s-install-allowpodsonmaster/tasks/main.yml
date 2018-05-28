@@ -1,0 +1,6 @@
+---
+  # Allow pods on master
+  - name: Allow pods on master
+    shell: "kubectl taint nodes --all node-role.kubernetes.io/master-"
+    register: command_result
+    failed_when: "command_result.rc != 0 and 'not found' not in command_result.stderr"

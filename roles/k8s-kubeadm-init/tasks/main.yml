@@ -1,0 +1,11 @@
+---
+  # Launch kubeadm init
+  - name: Launch kubeadmin init (can take minutes to complete)
+    shell: kubeadm init --pod-network-cidr={{ pod_network_cidr }} --apiserver-advertise-address=$(hostname --ip-address)
+    args:
+#      creates: /etc/kubernetes/admin.conf
+      creates: /etc/kubernetes/manifests/kube-apiserver.yaml
+
+  # Generate token to add worker nodes later
+  - name: Generate token to add worker nodes later
+    shell: "kubeadm token create > /tmp/kubeadm_token"

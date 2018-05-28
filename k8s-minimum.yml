@@ -1,0 +1,72 @@
+## Kubernetes pre-requisites
+- name: Apply Kubernetes pre-requisite configuration to all nodes
+  hosts: k8s-all
+  roles:
+    - common-prereq-software
+
+## Install Docker
+- name: Install Docker
+  hosts: k8s-all
+  roles:
+    - thirdparty-docker
+
+## Configure Kubernetes gpgkey and repository
+- name: Configure Kubernetes gpgkey and repository
+  hosts: k8s-all
+  roles:
+    - k8s-configure-gpgkey
+    - k8s-configure-repository
+
+## Install Kubernetes
+- name: Install Kubernetes
+  hosts: k8s-all
+  roles:
+    - k8s-install
+
+## Launch kubeadm init
+- name: Launch kubeadm init
+  hosts: k8s-master
+  roles:
+    - k8s-kubeadm-init
+
+## Configure kubectl
+- name: Configure kubectl
+  hosts: k8s-all
+  roles:
+    - k8s-kubectl-config
+
+## Install Flannel
+- name: Install Flannel
+  hosts: k8s-master
+  roles:
+    - k8s-install-flannel
+
+## Install Dashboard
+- name: Install dashboard
+  hosts: k8s-master
+  roles:
+    - k8s-install-dashboard
+
+## Allow pods on master
+- name: Allow pods on master
+  hosts: k8s-master
+  roles:
+    - {role: k8s-install-allowpodsonmaster, when: allow_pods_on_master == true}
+
+## Deploy demo environment settings, not for production environments!
+- name: Deploy demo environment settings, not for production environments!
+  hosts: k8s-master
+  roles:
+    - {role: k8s-install-demo, when: demo_environment == true}
+
+## Join worker nodes
+- name: Join worker nodes
+  hosts: k8s-worker
+  roles:
+    - k8s-worker-join
+
+## Finalize installation
+- name: Finalize Kubernetes Installation
+  hosts: k8s-master
+  roles:
+    - k8s-install-finalize

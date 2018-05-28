@@ -1,0 +1,17 @@
+---
+  # Add worker node to cluster (kubeadm join)
+  - name: Add worker node to cluster (kubeadm join)
+    shell: "kubeadm join {{item}}:6443 --discovery-token-unsafe-skip-ca-verification --token {{lookup('file', '/tmp/kubeadm_token') }}"
+    args:
+      creates: /etc/kubernetes/kubelet.conf
+    with_items:
+      -  "{{groups['masternode']}}"
+    register: command_result
+    ignore_errors: yes
+    # Todo: improve error handling
+
+  # Remove token file for security reasons
+  - name: Remove token file
+    file:
+      path: /tmp/kubeadm_token
+      state: absent

@@ -1,0 +1,16 @@
+---
+  # Install Kubernetes kubelet, kubectl, kubeadm
+  - name: Install kubelet, kubectl, kubeadm
+    package: name={{item}} state=present
+    with_items:
+      - kubelet
+      - kubectl
+      - kubeadm
+
+  # Launch the Kubelet service
+  - name: Start the kubelet service
+    systemd:
+      name: kubelet
+      state: restarted
+      enabled: yes
+      daemon_reload: yes

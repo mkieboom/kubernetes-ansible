@@ -1,0 +1,61 @@
+---
+# Install MapR Pre-requisites software packages
+  
+  # Disable selinux
+  - name: Set selinux config to disabled
+    selinux: state=disabled policy=targeted
+
+  - name: Selinux to permissive now
+    command: setenforce permissive
+    register: command_result
+    failed_when: "command_result is failed and 'setenforce: SELinux is disabled' in command_result.msg"
+    ignore_errors: yes
+
+  # Disable swap
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: swap
+      fstype: swap
+      state: absent
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  # Add the br_netfilter module to enable bridged networking
+  - name: Add the br_netfilter module to enable birdged networking
+    modprobe:
+      name: br_netfilter
+      state: present
+
+  # Enable bridged networking - bridge-nf-call-ip6tables
+  - name: Enable bridged networking - bridge-nf-call-ip6tables
+    become: yes
+    sysctl:
+      name: net.bridge.bridge-nf-call-ip6tables
+      value: 1
+      sysctl_set: yes
+      state: present
+      reload: yes
+
+  # Enable bridged networking - bridge-nf-call-iptables
+  - name: Enable bridged networking - bridge-nf-call-iptables
+    become: yes
+    sysctl:
+      name: net.bridge.bridge-nf-call-iptables
+      value: 1
+      sysctl_set: yes
+      state: present
+      reload: yes
+
+  # Check if running on Amazon EC2 machines
+  - name: Check if running on Amazon EC2 machines
+    shell: grep -s -o 'ec2' /sys/hypervisor/uuid | wc -l
+    register: amazon_ec2_node
+
+  # Enable extra repo for Docker installation on AWS
+  - name: Enable extra repo for Docker installation on AWS
+    shell: "yum-config-manager --enable rhui-REGION-rhel-server-extras"
+    when: amazon_ec2_node.stdout == '1'
+    ignore_errors: yes
+

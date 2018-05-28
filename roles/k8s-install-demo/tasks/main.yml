@@ -1,0 +1,34 @@
+---
+  # Make default user part of cluster admin (NOT for production clusters, for demos only!)
+  - name: Make default user part of cluster admin (NOT for production clusters, for demos only!)
+    shell: "kubectl create clusterrolebinding --user system:serviceaccount:kube-system:default kube-system-cluster-admin --clusterrole cluster-admin"
+    register: command_result
+    failed_when: "command_result.rc != 0 and 'already exists' not in command_result.stderr"
+
+  # Allow opening the k8 dashboard without login (NOT for production clusters, for demos only!)
+  - name: Allow opening the k8 dashboard without login (NOT for production clusters, for demos only!)
+    blockinfile:
+      path: /tmp/k8auth.yaml
+      create: yes
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      block: |
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        kind: ClusterRoleBinding
+        metadata:
+          name: kubernetes-dashboard
+          labels:
+            k8s-app: kubernetes-dashboard
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: kubernetes-dashboard
+          namespace: kube-system
+
+  # Allow opening the k8 dashboard without login (NOT for production clusters, for demos only!)
+  - name: Allow opening the k8 dashboard without login (NOT for production clusters, for demos only!)
+    shell: "kubectl create -f /tmp/k8auth.yaml"
+    register: command_result
+    failed_when: "command_result.rc != 0 and 'already exists' not in command_result.stderr"

@@ -1,0 +1,4 @@
+---
+  # Install Flannel as cluster networking
+  - name: Install Flannel as cluster networking
+    shell: kubectl apply -f {{ flannel_url }}
