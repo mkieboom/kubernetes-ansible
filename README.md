@@ -22,11 +22,15 @@ Specify the below configuration parameters
 vi group_vars/all
 ```
 
-# Allow running pods on master (yes/no=default)
+Allow running pods on master (yes/no=default)
+```
 allow_pods_on_master: 'no'
+```
 
-# Deploy demo environment settings, not for production environments! (yes/no=default)
+Deploy demo environment settings, not for production environments! (yes/no=default)
+```
 demo_environment: 'no'
+```
 
 #### Node Configuration
 Specify the node IP addresses or hostnames in the appropriate myhosts file, eg:
