@@ -1,5 +1,5 @@
 ---
-  - name: Install yum-utils, device-mapper-persistent-data and lvm2
+  - name: Install docker-ce dependencies
     package: name={{item}} state=present
     with_items:
       - yum-utils
