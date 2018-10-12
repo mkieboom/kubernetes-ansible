@@ -1,10 +1,20 @@
 ---
-  # Set pre-requisites for Streamsets
+  - name: Install yum-utils, device-mapper-persistent-data and lvm2
+    package: name={{item}} state=present
+    with_items:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+
+  - name: Add Docker repository
+    shell: yum-config-manager --add-repo {{docker_repo_url}}
+
+  # Install docker
   - name: Install Docker
     package: name={{item}} state=present
     with_items:
-      - docker
-      - docker-compose
+      - docker-ce
+
 
   # # Configure http proxy for Docker if required
   # # doc: https://docs.docker.com/engine/admin/systemd/#httphttps-proxy
