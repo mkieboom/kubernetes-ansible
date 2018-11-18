@@ -20,3 +20,4 @@ dashboard_yaml: kubernetes-dashboard.yaml
 
 # Docker
 docker_repo_url: https://download.docker.com/linux/centos/docker-ce.repo
+docker_version: 18.06

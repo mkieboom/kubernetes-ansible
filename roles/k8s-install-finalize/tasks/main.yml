@@ -4,13 +4,16 @@
     debug:
       msg:
         - "Finished installing Kubernetes."
+        - "Note that it may take a few minutes before all containers are running."
+        - ""
         - "Please validate that all containers are 'Running' using:"
         - "kubectl get pods --all-namespaces"
-        - "it may take a few minutes before all containers are running."
         - ""
         - "Once all containers are running open the Kubernetes Dashboard:"
-        - "https://{{item}}:{{dashboard_service_port}}"
-    with_items:
-      -  "{{groups['masternode']}}"
+        - "https://<ip>:{{dashboard_service_port}}"
+        - ""
+        - "If you have configured 'demo_environment=yes', click 'skip' on K8S sign in page."
+#    with_items:
+#      -  "{{groups['masternode']}}"
 
 

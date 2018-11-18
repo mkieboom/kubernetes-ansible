@@ -1,7 +1,7 @@
 # Cluster Node definition
 
 [masternode]
-192.168.168.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
+127.0.0.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
 
 [workernodes]
 
