@@ -3,9 +3,9 @@
   - name: Install kubelet, kubectl, kubeadm
     package: name={{item}} state=present
     with_items:
-      - kubelet
-      - kubectl
-      - kubeadm
+      - kubelet-{kubernetes_version}*
+      - kubectl-{kubernetes_version}*
+      - kubeadm-{kubernetes_version}*
 
   # Launch the Kubelet service
   - name: Start the kubelet service

@@ -2,6 +2,10 @@
 # Kubernetes pod network cidr
 pod_network_cidr: 10.244.0.0/16
 
+# Install a specific Kubernetes version. Don't specify for latest K8S version.
+# Example: 
+# kubernetes_version: 1.13.0
+
 # Allow running pods on master (yes/no=default)
 allow_pods_on_master: 'no'
 
