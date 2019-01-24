@@ -21,6 +21,14 @@
             k8s-app: kubernetes-dashboard
           type: {{ dashboard_service_type }}
 
+  # Allow skip login on the Dashboard UI page for demo purposes
+  - name: Allow skip login on the Dashboard UI page for demo purposes
+    lineinfile:
+      path: "/tmp/{{ dashboard_yaml }}"
+      insertafter: '        args:'
+      line: '          - --enable-skip-login'
+    when: demo_environment == 'yes'
+
   # Install Dashboard
   - name: Install Kubernetes Dashboard
     shell: kubectl create -f /tmp/{{ dashboard_yaml }}
