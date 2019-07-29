@@ -20,9 +20,9 @@ flannel_url: https://raw.githubusercontent.com/coreos/flannel/master/Documentati
 # Dashboard Service Type can be: NodePort/ClusterIP/ExternalName/LoadBalancer
 dashboard_service_type: NodePort
 dashboard_service_port: 30001
-dashboard_url: https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
+dashboard_url: https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 dashboard_yaml: kubernetes-dashboard.yaml
 
 # Docker
 docker_repo_url: https://download.docker.com/linux/centos/docker-ce.repo
-docker_version: 18.09
+docker_version: 
