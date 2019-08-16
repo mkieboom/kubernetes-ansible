@@ -4,6 +4,7 @@
     copy:
       src: /etc/kubernetes/admin.conf
       dest: /etc/kubernetes/config
+    become: true
 
   - name: Copy config keys to all nodes
     copy:
@@ -11,6 +12,7 @@
       dest: /root/.kube/
       owner: root
       group: root
+    become: true
 
   - name: Copy token key to all nodes (required for kubeadm join)
     copy:
