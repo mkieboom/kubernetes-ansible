@@ -1,18 +1,22 @@
 ---
   # Deploy kubeconfig files to all nodes
+
+  #- name: Create a copy of admin.conf to config
+  #  copy:
+  #    src: /etc/kubernetes/admin.conf
+  #    dest: /etc/kubernetes/config
+
+  # As copy doesn't use respect become=true, the below is a workaround
+  # more info: https://github.com/ansible/ansible/issues/21145
   - name: Create a copy of admin.conf to config
-    copy:
-      src: /etc/kubernetes/admin.conf
-      dest: /etc/kubernetes/config
-    become: true
+    shell: chmod 644 /etc/kubernetes/admin.conf && cp /etc/kubernetes/admin.conf /etc/kubernetes/config
 
   - name: Copy config keys to all nodes
     copy:
       src: /etc/kubernetes/config
       dest: /root/.kube/
-      owner: root
-      group: root
-    become: true
+      # owner: root
+      # group: root
 
   - name: Copy token key to all nodes (required for kubeadm join)
     copy:
