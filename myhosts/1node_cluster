@@ -5,10 +5,6 @@
 
 [workernodes]
 
-[k8s_all:children]
-masternode
-workernodes
-
 [k8s_master:children]
 masternode
 

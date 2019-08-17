@@ -1,25 +1,25 @@
 ## Kubernetes pre-requisites
 - name: Apply Kubernetes pre-requisite configuration to all nodes
-  hosts: k8s_all
+  hosts: all
   roles:
     - common-prereq-software
 
 ## Install Docker
 - name: Install Docker
-  hosts: k8s_all
+  hosts: all
   roles:
     - thirdparty-docker
 
 ## Configure Kubernetes gpgkey and repository
 - name: Configure Kubernetes gpgkey and repository
-  hosts: k8s_all
+  hosts: all
   roles:
     - k8s-configure-gpgkey
     - k8s-configure-repository
 
 ## Install Kubernetes
 - name: Install Kubernetes
-  hosts: k8s_all
+  hosts: all
   roles:
     - k8s-install
 
@@ -31,7 +31,7 @@
 
 ## Configure kubectl
 - name: Configure kubectl
-  hosts: k8s_all
+  hosts: all
   roles:
     - k8s-kubectl-config
 
