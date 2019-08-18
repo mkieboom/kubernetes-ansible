@@ -1,0 +1,96 @@
+# https://manski.net/2016/09/vagrant-multi-machine-tutorial/#starting-and-interacting-with-your-first-vm
+NODE_IMAGE = "centos/7"
+#NODE_NAME_PREFIX = "k8snode0"
+NODE_COUNT = 2
+#NODE_MEMORY = 4096
+#NODE_CPU = 2
+
+GIT_ANSIBLE_PROJECT = "https://github.com/mkieboom/kubernetes-ansible"
+ANSIBLE_PLAYBOOK = "kubernetes-ansible/cluster-minimum.yml"
+
+cluster = {
+  "k8snode02" => { :ip => "192.168.168.22", :cpus => 2, :mem => 4096 },
+  "k8snode01" => { :ip => "192.168.168.21", :cpus => 2, :mem => 4096 }
+}
+
+$script = <<EOF
+# Run yum update
+#sudo yum update -y
+
+# Install basics
+#sudo yum install -y net-tools
+
+EOF
+
+
+Vagrant.configure(2) do |configuration|
+
+  cluster.each_with_index do |(hostname, info), index|
+
+    configuration.vm.define hostname do |config|
+      config.vm.provider :virtualbox do |vb, override|
+        config.vm.box = NODE_IMAGE
+        override.vm.network :private_network, ip: "#{info[:ip]}"
+        #override.vm.network :public_network, bridge: "en0: Wi-Fi (Wireless)", ip: "192.168.3.#{node_id + 10}"
+        override.vm.hostname = hostname
+        vb.name = hostname
+        vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus]]
+      end # end provider
+
+      # Load my public ssh key for both the 'root' and 'vagrant' user
+      config.vm.provision :shell, inline: "mkdir -p /root/.ssh"
+      config.vm.provision :file, source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/me.pub"
+      config.vm.provision :shell, inline: "cat /home/vagrant/.ssh/me.pub >> /home/vagrant/.ssh/authorized_keys", privileged: false
+      config.vm.provision :shell, inline: "sudo cp /home/vagrant/.ssh/me.pub /root/.ssh/authorized_keys"
+
+      # Launch the shell script
+      config.vm.provision "shell", inline: $script
+
+      # Create an entry in /etc/hosts file for each node
+      cluster.each_with_index do |(hostname, info), index|
+        config.vm.provision :shell, inline: "sudo echo #{info[:ip]} #{hostname} | sudo tee -a /etc/hosts"
+      end # end cluster
+
+      # config.vm.provision "shell" do |s|
+      #   ssh_insecure_key = File.readlines("#{Dir.home}/.vagrant.d/insecure_private_key").first.strip
+      #   s.inline = <<-SHELL
+      #     echo #{ssh_insecure_key} >> /home/vagrant/.ssh/id_rsa
+      #     chown vagrant /home/vagrant/.ssh/id_rsa
+      #     chmod 400 /home/vagrant/.ssh/id_rsa
+      #   SHELL
+      # end # end privision
+
+
+      if hostname == "k8snode01"
+        # Only install git on the last node
+        config.vm.provision "shell", inline: <<-EOF
+          yum install -y git
+          git clone #{GIT_ANSIBLE_PROJECT}
+
+          # Setup keyless ssh between vagrant nodes
+          ssh-keygen -t rsa -q -f /home/vagrant/.ssh/id_rsa -P ""
+        EOF
+
+        # Run ansible
+        config.vm.provision "ansible_local" do |ansible|
+          ansible.provisioning_path = "/home/vagrant/"
+          ansible.playbook = ANSIBLE_PLAYBOOK
+          ansible.become = true
+          ansible.limit = "all"
+          #ansible.verbose = "-vvv"
+          #ansible.groups = ANSIBLE_GROUPS
+          ansible.groups = {
+            "k8s_master" => ["192.168.168.21"],
+            "k8s_worker"  => ["192.168.168.22"]
+          }
+          ansible.extra_vars = {
+            allow_pods_on_master: "yes",
+            demo_environment: "yes"
+          }
+        end
+      end # end if
+
+    end # end config
+
+  end # end cluster
+end
