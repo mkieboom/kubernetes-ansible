@@ -10,9 +10,12 @@ SSH_PUBLIC_KEY = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8c3uZAc1s+uxfaKdmWbAzxh
 GIT_ANSIBLE_PROJECT = "https://github.com/mkieboom/kubernetes-ansible"
 ANSIBLE_PLAYBOOK = "kubernetes-ansible/cluster-minimum.yml"
 
+# Cluster definition
+# format:
+# "<hostname>" => {private_ip, cpus, mem}
 cluster = {
-  "k8snode02" => { :ip => "192.168.168.22", :cpus => 2, :mem => 4096 },
-  "k8snode01" => { :ip => "192.168.168.21", :cpus => 2, :mem => 4096 }
+  "k8snode02" => { :private_ip => "192.168.168.22", :cpus => 2, :mem => 4096 },
+  "k8snode01" => { :private_ip => "192.168.168.21", :cpus => 2, :mem => 4096 }
 }
 
 $script = <<EOF
@@ -32,7 +35,7 @@ Vagrant.configure(2) do |configuration|
     configuration.vm.define hostname do |config|
       config.vm.provider :virtualbox do |vb, override|
         config.vm.box = NODE_IMAGE
-        override.vm.network :private_network, ip: "#{info[:ip]}"
+        override.vm.network :private_network, ip: "#{info[:private_ip]}"
         #override.vm.network :public_network, bridge: "en0: Wi-Fi (Wireless)", ip: "192.168.3.#{node_id + 10}"
         override.vm.hostname = hostname
         vb.name = hostname
@@ -50,7 +53,7 @@ Vagrant.configure(2) do |configuration|
 
       # Create an entry in /etc/hosts file for each node
       cluster.each_with_index do |(hostname, info), index|
-        config.vm.provision :shell, inline: "sudo echo #{info[:ip]} #{hostname} | sudo tee -a /etc/hosts"
+        config.vm.provision :shell, inline: "sudo echo #{info[:private_ip]} #{hostname} | sudo tee -a /etc/hosts"
       end # end cluster
 
       # config.vm.provision "shell" do |s|
@@ -71,6 +74,7 @@ Vagrant.configure(2) do |configuration|
 
           # Setup keyless ssh between vagrant nodes
           ssh-keygen -t rsa -q -f /home/vagrant/.ssh/id_rsa -P ""
+          cp /home/vagrant/.ssh/id_rsa.pub /vagrant
         EOF
 
         # Run ansible
