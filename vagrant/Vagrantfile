@@ -5,6 +5,8 @@ NODE_COUNT = 2
 #NODE_MEMORY = 4096
 #NODE_CPU = 2
 
+SSH_PUBLIC_KEY = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8c3uZAc1s+uxfaKdmWbAzxhCRSesUCFKWfpdm0o7R8FKS+VUMxk8xAso+/H9jxsPfC+IO/bDeIYYAtrx/yZ7AKsucI22wvg8WEAZdaZpRbK214HRSwkVpfKNihUFi/JE0BiCScjkF1DPmfiApYZLTelJyoU68AJgaWG0i6khq+YwXI2ON5SXpPblvIASqD20LljTLjcus69ZhzoQAgWJ8ixE/eLDXnxwwqwUK8gMnCNzYblemyZ6roV4e24qjw9IE7lpc47yO3MuKoTtVMqwqzdAn1W3yMQIReChEBJYRTaJsQUFQjBr+jELkbSNhJv8nJn7OOO9yd/+jygYZ+NtX"
+
 GIT_ANSIBLE_PROJECT = "https://github.com/mkieboom/kubernetes-ansible"
 ANSIBLE_PLAYBOOK = "kubernetes-ansible/cluster-minimum.yml"
 
@@ -39,9 +41,9 @@ Vagrant.configure(2) do |configuration|
 
       # Load my public ssh key for both the 'root' and 'vagrant' user
       config.vm.provision :shell, inline: "mkdir -p /root/.ssh"
-      config.vm.provision :file, source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/me.pub"
-      config.vm.provision :shell, inline: "cat /home/vagrant/.ssh/me.pub >> /home/vagrant/.ssh/authorized_keys", privileged: false
-      config.vm.provision :shell, inline: "sudo cp /home/vagrant/.ssh/me.pub /root/.ssh/authorized_keys"
+#      config.vm.provision :file, source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/me.pub"
+      config.vm.provision :shell, inline: "echo #{SSH_PUBLIC_KEY} >> /home/vagrant/.ssh/authorized_keys", privileged: false
+      config.vm.provision :shell, inline: "sudo echo #{SSH_PUBLIC_KEY} >> /root/.ssh/authorized_keys"
 
       # Launch the shell script
       config.vm.provision "shell", inline: $script
