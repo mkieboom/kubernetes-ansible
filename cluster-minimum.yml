@@ -31,7 +31,7 @@
 
 ## Configure kubectl
 - name: Configure kubectl
-  hosts: all
+  hosts: k8s_master
   roles:
     - k8s-kubectl-config
 
