@@ -1,14 +1,12 @@
 # Cluster Node definition
 
-[masternode]
-127.0.0.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
+127.0.0.1 ansible_host=127.0.0.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
 
-[workernodes]
+[all]
+127.0.0.1
 
-[k8s_master:children]
-masternode
+[k8s_master]
+127.0.0.1
 
-[k8s_worker:children]
-workernodes
-
+[k8s_worker]
 
