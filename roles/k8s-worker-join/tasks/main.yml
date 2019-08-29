@@ -5,7 +5,7 @@
     args:
       creates: /etc/kubernetes/kubelet.conf
     with_items:
-      -  "{{groups['masternode']}}"
+      -  "{{groups['k8s_master']}}"
     register: command_result
     ignore_errors: yes
     # Todo: improve error handling
