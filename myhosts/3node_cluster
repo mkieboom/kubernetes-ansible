@@ -1,16 +1,8 @@
 # Cluster Node definition
 
-[masternode]
+[k8s_master]
 192.168.168.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
 
-[workernodes]
+[k8s_worker]
 192.168.168.2 ansible_user=root ansible_become=yes ansible_become_method=sudo
 192.168.168.3 ansible_user=root ansible_become=yes ansible_become_method=sudo
-
-[k8s_master:children]
-masternode
-
-[k8s_worker:children]
-workernodes
-
-
