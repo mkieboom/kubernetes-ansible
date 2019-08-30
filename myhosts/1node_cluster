@@ -1,12 +1,7 @@
 # Cluster Node definition
 
-127.0.0.1 ansible_host=127.0.0.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
-
-[all]
-127.0.0.1
-
 [k8s_master]
-127.0.0.1
+127.0.0.1 ansible_user=root ansible_become=yes ansible_become_method=sudo
 
 [k8s_worker]
 
