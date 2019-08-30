@@ -1,102 +1,165 @@
-# https://manski.net/2016/09/vagrant-multi-machine-tutorial/#starting-and-interacting-with-your-first-vm
-NODE_IMAGE = "centos/7"
-#NODE_NAME_PREFIX = "k8snode0"
-NODE_COUNT = 2
-#NODE_MEMORY = 4096
-#NODE_CPU = 2
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 
-SSH_PUBLIC_KEY = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8c3uZAc1s+uxfaKdmWbAzxhCRSesUCFKWfpdm0o7R8FKS+VUMxk8xAso+/H9jxsPfC+IO/bDeIYYAtrx/yZ7AKsucI22wvg8WEAZdaZpRbK214HRSwkVpfKNihUFi/JE0BiCScjkF1DPmfiApYZLTelJyoU68AJgaWG0i6khq+YwXI2ON5SXpPblvIASqD20LljTLjcus69ZhzoQAgWJ8ixE/eLDXnxwwqwUK8gMnCNzYblemyZ6roV4e24qjw9IE7lpc47yO3MuKoTtVMqwqzdAn1W3yMQIReChEBJYRTaJsQUFQjBr+jELkbSNhJv8nJn7OOO9yd/+jygYZ+NtX"
-
-GIT_ANSIBLE_PROJECT = "https://github.com/mkieboom/kubernetes-ansible"
-ANSIBLE_PLAYBOOK = "kubernetes-ansible/cluster-minimum.yml"
-
-# Cluster definition
-# format:
-# "<hostname>" => {private_ip, cpus, mem}
-cluster = {
-  "k8snode02" => { :private_ip => "192.168.168.22", :cpus => 2, :mem => 4096 },
-  "k8snode01" => { :private_ip => "192.168.168.21", :cpus => 2, :mem => 4096 }
-}
-
-$script = <<EOF
-# Run yum update
-#sudo yum update -y
-
-# Install basics
-#sudo yum install -y net-tools
-
-EOF
+# source:
+# https://ctrlnotes.com/vagrant-advanced-examples/#example-3
 
 
-Vagrant.configure(2) do |configuration|
+ssh_key = "~/.ssh/id_rsa"
+box     = "centos/7"
 
-  cluster.each_with_index do |(hostname, info), index|
+# Add an extra public key for remote accessing the servers
+ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8c3uZAc1s+uxfaKdmWbAzxhCRSesUCFKWfpdm0o7R8FKS+VUMxk8xAso+/H9jxsPfC+IO/bDeIYYAtrx/yZ7AKsucI22wvg8WEAZdaZpRbK214HRSwkVpfKNihUFi/JE0BiCScjkF1DPmfiApYZLTelJyoU68AJgaWG0i6khq+YwXI2ON5SXpPblvIASqD20LljTLjcus69ZhzoQAgWJ8ixE/eLDXnxwwqwUK8gMnCNzYblemyZ6roV4e24qjw9IE7lpc47yO3MuKoTtVMqwqzdAn1W3yMQIReChEBJYRTaJsQUFQjBr+jELkbSNhJv8nJn7OOO9yd/+jygYZ+NtX"
 
-    configuration.vm.define hostname do |config|
-      config.vm.provider :virtualbox do |vb, override|
-        config.vm.box = NODE_IMAGE
-        override.vm.network :private_network, ip: "#{info[:private_ip]}"
-        #override.vm.network :public_network, bridge: "en0: Wi-Fi (Wireless)", ip: "192.168.3.#{node_id + 10}"
-        override.vm.hostname = hostname
-        vb.name = hostname
-        vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus]]
-      end # end provider
+# List of Kubernetes servers
+# NOTE: in reverse order to run ansible from the last node in the servers list
+servers = [
+  { :hostname => "k8snode03", :hostonly_ip => "192.168.168.13", :bridged_ip => "192.168.1.63", :ram => 6144, :cpu => 2, :ansible_group => "k8s_worker" },
+  { :hostname => "k8snode02", :hostonly_ip => "192.168.168.12", :bridged_ip => "192.168.1.62", :ram => 6144, :cpu => 2, :ansible_group => "k8s_worker" },
+  { :hostname => "k8snode01", :hostonly_ip => "192.168.168.11", :bridged_ip => "192.168.1.61", :ram => 6144, :cpu => 2, :ansible_group => "k8s_master" }
+]
 
-      # Load my public ssh key for both the 'root' and 'vagrant' user
-      config.vm.provision :shell, inline: "mkdir -p /root/.ssh"
-#      config.vm.provision :file, source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/me.pub"
-      config.vm.provision :shell, inline: "echo #{SSH_PUBLIC_KEY} >> /home/vagrant/.ssh/authorized_keys", privileged: false
-      config.vm.provision :shell, inline: "sudo echo #{SSH_PUBLIC_KEY} >> /root/.ssh/authorized_keys"
-
-      # Launch the shell script
-      config.vm.provision "shell", inline: $script
-
-      # Create an entry in /etc/hosts file for each node
-      cluster.each_with_index do |(hostname, info), index|
-        config.vm.provision :shell, inline: "sudo echo #{info[:private_ip]} #{hostname} | sudo tee -a /etc/hosts"
-      end # end cluster
-
-      # config.vm.provision "shell" do |s|
-      #   ssh_insecure_key = File.readlines("#{Dir.home}/.vagrant.d/insecure_private_key").first.strip
-      #   s.inline = <<-SHELL
-      #     echo #{ssh_insecure_key} >> /home/vagrant/.ssh/id_rsa
-      #     chown vagrant /home/vagrant/.ssh/id_rsa
-      #     chmod 400 /home/vagrant/.ssh/id_rsa
-      #   SHELL
-      # end # end privision
+# Git and ansible configuration
+git_ansible_project = "https://github.com/mkieboom/kubernetes-ansible"
+ansible_playbook = "kubernetes-ansible/cluster-minimum.yml"
+ansible_inventory_path = "hosts"
+ansible_user = "root"
+ansible_extra_vars = {
+                        allow_pods_on_master: "yes",
+                        demo_environment: "yes"
+                      }
 
 
-      if hostname == "k8snode01"
-        # Only install git on the last node
-        config.vm.provision "shell", inline: <<-EOF
-          yum install -y git
-          git clone #{GIT_ANSIBLE_PROJECT}
+Vagrant.configure(2) do |config|
+  if Vagrant.has_plugin?("vagrant-hostmanager")
+    config.hostmanager.enabled = true
+    config.hostmanager.manage_host = true
+    config.hostmanager.manage_guest = true
+    config.hostmanager.ignore_private_ip = false
+    config.hostmanager.include_offline = false
+  end #end if
 
-          # Setup keyless ssh between vagrant nodes
-          ssh-keygen -t rsa -q -f /home/vagrant/.ssh/id_rsa -P ""
-          cp /home/vagrant/.ssh/id_rsa.pub /vagrant
-        EOF
+  # Dynamically create the ansible hosts file based on the servers array
+  if File.dirname(ansible_inventory_path) != "."
+    Dir.mkdir(File.dirname(ansible_inventory_path)) unless Dir.exist?(File.dirname(ansible_inventory_path))
+  end #end if
+  File.open(ansible_inventory_path, 'w') do |f|
+    servers.each do |cfg|
+      if cfg[:ip] != "dhcp"
+        f.write "#{cfg[:hostname]} ansible_host=#{cfg[:ip]} "
+        f.write "ansible_user=#{ansible_user} ansible_ssh_private_key_file=#{ssh_key}\n"
+      else
+        f.write "#{cfg[:hostname]} ansible_user=#{ansible_user} ansible_ssh_private_key_file=#{ssh_key}\n"
+      end #end if
+    end #end do
+    f.write "\n"
+    f.write "[all]\n"
+    servers.each do |cfg|
+      f.write "#{cfg[:hostname]}\n"
+    end #end do
+    f.write "\n"
+    servers.each do |cfg|
+      f.write "[#{cfg[:ansible_group]}]\n"
+      f.write "#{cfg[:hostname]}\n"
+      f.write "\n"
+    end #end do
+  end #end do
 
-        # Run ansible
-        config.vm.provision "ansible_local" do |ansible|
-          ansible.provisioning_path = "/home/vagrant/"
-          ansible.playbook = ANSIBLE_PLAYBOOK
-          ansible.become = true
-          ansible.limit = "all"
-          #ansible.verbose = "-vvv"
-          #ansible.groups = ANSIBLE_GROUPS
-          ansible.groups = {
-            "k8s_master" => ["192.168.168.21"],
-            "k8s_worker"  => ["192.168.168.22"]
-          }
-          ansible.extra_vars = {
-            allow_pods_on_master: "yes",
-            demo_environment: "yes"
-          }
-        end
-      end # end if
+  # Configure the servers
+  servers.each_with_index do |server, index|
+      
+    # Create hosts file on all the servers
+    config.vm.provision :shell, inline: "sudo echo #{server[:hostonly_ip]} #{server[:hostname]} | sudo tee -a /etc/hosts"
 
-    end # end config
+    box_image = server[:box] ? server[:box] : box;
+    config.vm.define server[:hostname] do |conf|
 
-  end # end cluster
-end
+      conf.vm.box = box_image.to_s
+      conf.vm.hostname = server[:hostname]
+
+      # Host only network config
+      net_config_hostonly = {}
+      if server[:hostonly_ip] != "dhcp"
+        net_config_hostonly[:ip] = server[:hostonly_ip]
+        net_config_hostonly[:netmask] = server[:netmask] || "255.255.255.0"
+      else
+        net_config_hostonly[:type] = "dhcp"
+      end
+      conf.vm.network "private_network", net_config_hostonly
+
+      # Bridged network config
+      net_config_bridged = {}
+      net_config_bridged[:bridge] = "eno1"
+      if server[:bridged_ip] != "dhcp"
+        net_config_bridged[:ip] = server[:bridged_ip]
+        net_config_bridged[:netmask] = server[:netmask] || "255.255.255.0"
+      else
+        net_config_bridged[:type] = "dhcp"
+      end
+      conf.vm.network "public_network", net_config_bridged
+
+      # Configure port forwarding (optional)
+      if !server[:port_guest].nil? && !server[:port_host].nil?
+        conf.vm.network "forwarded_port", guest: server[:port_guest], host: server[:port_host]
+      end
+
+      # Configure shared folders (optional)
+      if !server[:folder_guest].nil? && !server[:folder_host].nil?
+        conf.vm.synced_folder server[:folder_host], server[:folder_guest]
+      end
+
+      # Confogure the machine CPU and memory
+      cpu = server[:cpu] ? server[:cpu] : 1;
+      memory = server[:ram] ? server[:ram] : 512;
+      config.vm.provider "virtualbox" do |vb|
+        vb.customize ["modifyvm", :id, "--cpus", cpu.to_s]
+        vb.customize ["modifyvm", :id, "--memory", memory.to_s]
+        vb.name = server[:hostname]
+      end
+
+      # Add the private and public key for keyless ssh between the servers
+      config.ssh.private_key_path = ["~/.vagrant.d/insecure_private_key", ssh_key]
+      config.ssh.insert_key = false
+      config.vm.provision "file", source: ssh_key , destination: "~/.ssh/id_rsa"
+      config.vm.provision "file", source: ssh_key + ".pub", destination: "~/.ssh/authorized_keys"
+
+      # Also add my personal public key to the authorized keys file
+      config.vm.provision :shell, inline: "echo #{ssh_public_key} >> /home/vagrant/.ssh/authorized_keys", privileged: false
+      config.vm.provision :shell, inline: "sudo echo #{ssh_public_key} >> /root/.ssh/authorized_keys"
+
+      # Add the private and public key for the root user as well to run ansible as root
+      config.vm.provision "shell", inline: <<-EOF
+        sudo mkdir -p /root/.ssh/
+        sudo cp /home/vagrant/.ssh/id_rsa /root/.ssh/id_rsa
+        sudo cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+      EOF
+
+      # Remove 127.0.0.1 <hostname> from /etc/hosts to allow correct IP lookup
+      config.vm.provision :shell, inline: "sed -i'' '/^127.0.0.1\\t#{conf.vm.hostname}\\t#{conf.vm.hostname}$/d' /etc/hosts"
+
+      # Install some basic tools
+      if index == servers.size - 1
+        if ansible_playbook != ""
+          config.vm.provision "shell", inline: <<-EOF
+            yum install -y epel-release
+            yum install -y git ansible clustershell net-tools wget
+            git clone #{git_ansible_project}
+
+            # Disable ansible SSH host key checking
+            sed -ie "s|^#host_key_checking = False|host_key_checking = False|g" /etc/ansible/ansible.cfg
+          EOF
+
+          # Launch the ansible script
+          config.vm.provision :ansible_local do |ansible|
+            ansible.inventory_path = "/vagrant/" + ansible_inventory_path
+            ansible.verbose = "v"
+            ansible.limit = "all"
+            ansible.become = true
+            ansible.playbook = "/home/vagrant/" + ansible_playbook
+            ansible.extra_vars = ansible_extra_vars
+          end # end ansible
+        end # end if
+      end #end if
+    end #end conf    
+  end #end servers
+end #end config
