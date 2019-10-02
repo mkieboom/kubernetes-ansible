@@ -1,4 +1,20 @@
 ---
+  # Download Flannel yaml
+  - name: Download Flannel yaml
+    get_url:
+      url: "{{ flannel_url }}"
+      dest: "/tmp/flannel.yaml"
+      force: yes
+
+  # Specify flannerl network interface when deploying using Vagrant
+  # more info: https://github.com/coreos/flannel/blob/master/Documentation/running.md#running-on-vagrant
+  - name: Specify flannerl network interface when deploying using Vagrant
+    lineinfile:
+      path: "/tmp/flannel.yaml"
+      insertafter: '        - --kube-subnet-mgr'
+      line: '        - --iface=eth1'
+    when: vagrant_deployment == 'yes'
+
   # Install Flannel as cluster networking
   - name: Install Flannel as cluster networking
-    shell: kubectl apply -f {{ flannel_url }}
+    shell: kubectl apply -f /tmp/flannel.yaml

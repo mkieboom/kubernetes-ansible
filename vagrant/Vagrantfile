@@ -14,9 +14,9 @@ ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8c3uZAc1s+uxfaKdmWbAzxh
 # List of Kubernetes servers
 # NOTE: in reverse order to run ansible from the last node in the servers list
 servers = [
-  { :hostname => "k8snode03", :hostonly_ip => "192.168.168.13", :bridged_ip => "192.168.1.63", :ram => 6144, :cpu => 2, :ansible_group => "k8s_worker" },
-  { :hostname => "k8snode02", :hostonly_ip => "192.168.168.12", :bridged_ip => "192.168.1.62", :ram => 6144, :cpu => 2, :ansible_group => "k8s_worker" },
-  { :hostname => "k8snode01", :hostonly_ip => "192.168.168.11", :bridged_ip => "192.168.1.61", :ram => 6144, :cpu => 2, :ansible_group => "k8s_master" }
+  { :hostname => "k8snode03", :hostonly_ip => "192.168.168.63", :bridged_ip => "192.168.1.63", :bridged_adapter=> "eno1", :ram => 8192, :cpu => 2, :ansible_group => "k8s_worker" },
+  { :hostname => "k8snode02", :hostonly_ip => "192.168.168.62", :bridged_ip => "192.168.1.62", :bridged_adapter=> "eno1", :ram => 8192, :cpu => 2, :ansible_group => "k8s_worker" },
+  { :hostname => "k8snode01", :hostonly_ip => "192.168.168.61", :bridged_ip => "192.168.1.61", :bridged_adapter=> "eno1", :ram => 8192, :cpu => 2, :ansible_group => "k8s_master" }
 ]
 
 # Git and ansible configuration
@@ -25,8 +25,10 @@ ansible_playbook = "kubernetes-ansible/cluster-minimum.yml"
 ansible_inventory_path = "hosts"
 ansible_user = "root"
 ansible_extra_vars = {
+                        vagrant_deployment: "yes",
                         allow_pods_on_master: "yes",
-                        demo_environment: "yes"
+                        demo_environment: "yes",
+                        kubernetes_version: "1.15.0"
                       }
 
 
@@ -89,7 +91,7 @@ Vagrant.configure(2) do |config|
 
       # Bridged network config
       net_config_bridged = {}
-      net_config_bridged[:bridge] = "eno1"
+      net_config_bridged[:bridge] = server[:bridged_adapter]
       if server[:bridged_ip] != "dhcp"
         net_config_bridged[:ip] = server[:bridged_ip]
         net_config_bridged[:netmask] = server[:netmask] || "255.255.255.0"
@@ -114,7 +116,7 @@ Vagrant.configure(2) do |config|
       config.vm.provider "virtualbox" do |vb|
         vb.customize ["modifyvm", :id, "--cpus", cpu.to_s]
         vb.customize ["modifyvm", :id, "--memory", memory.to_s]
-        vb.name = server[:hostname]
+        vb.name = server[:hostname] + "_" + server[:bridged_ip]
       end
 
       # Add the private and public key for keyless ssh between the servers
@@ -124,8 +126,7 @@ Vagrant.configure(2) do |config|
       config.vm.provision "file", source: ssh_key + ".pub", destination: "~/.ssh/authorized_keys"
 
       # Also add my personal public key to the authorized keys file
-      config.vm.provision :shell, inline: "echo #{ssh_public_key} >> /home/vagrant/.ssh/authorized_keys", privileged: false
-      config.vm.provision :shell, inline: "sudo echo #{ssh_public_key} >> /root/.ssh/authorized_keys"
+      config.vm.provision :shell, inline: "echo #{ssh_public_key} >> ~/.ssh/authorized_keys", privileged: false
 
       # Add the private and public key for the root user as well to run ansible as root
       config.vm.provision "shell", inline: <<-EOF
