@@ -27,9 +27,9 @@ Allow running pods on master (yes/no=default)
 allow_pods_on_master: 'no'
 ```
 
-Deploy demo environment settings, not for production environments! (yes/no=default)
+Enable skip-login button on K8S web dashboard, not for production environments! (yes/no=default)
 ```
-demo_environment: 'no'
+enable_skip_login: 'no'
 ```
 
 #### Node Configuration
@@ -47,7 +47,7 @@ vi myhosts/3node_cluster
 Example playbook command deploying a single node K8S environment allowing pods on master and no login required (not for production environments!):
 ```
 export ANSIBLE_HOST_KEY_CHECKING=False
-ansible-playbook -i myhosts/1node_cluster cluster-minimum.yml -e "allow_pods_on_master=yes" -e "demo_environment=yes"
+ansible-playbook -i myhosts/1node_cluster cluster-minimum.yml -e "allow_pods_on_master=yes" -e "enable_skip_login=yes"
 ```
 Example playbook command deploying a 3 node K8S environment not allowing pods on master (not for production environments!):
 ```

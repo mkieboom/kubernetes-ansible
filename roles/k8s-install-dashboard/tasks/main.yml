@@ -27,7 +27,7 @@
       path: "/tmp/{{ dashboard_yaml }}"
       insertafter: '        args:'
       line: '          - --enable-skip-login'
-    when: demo_environment == 'yes'
+    when: enable_skip_login == 'yes'
 
   # Install Dashboard
   - name: Install Kubernetes Dashboard

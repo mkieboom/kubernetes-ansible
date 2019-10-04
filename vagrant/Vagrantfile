@@ -27,7 +27,7 @@ ansible_user = "root"
 ansible_extra_vars = {
                         vagrant_deployment: "yes",
                         allow_pods_on_master: "yes",
-                        demo_environment: "yes",
+                        enable_skip_login: "yes",
                         kubernetes_version: "1.15.0"
                       }
 

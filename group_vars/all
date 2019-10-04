@@ -10,8 +10,8 @@ kubernetes_version:
 # Allow running pods on master (yes/no=default)
 allow_pods_on_master: 'no'
 
-# Deploy demo environment settings, not for production environments! (yes/no=default)
-demo_environment: 'no'
+# Enable the skip-login button on the K8S web dashboard, not for production environments! (yes/no=default)
+enable_skip_login: 'no'
 
 # Flannel version and url
 flannel_url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml

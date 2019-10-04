@@ -12,7 +12,7 @@
         - "Once all containers are running open the Kubernetes Dashboard:"
         - "https://<ip>:{{dashboard_service_port}}"
         - ""
-        - "If you have configured 'demo_environment=yes', click 'skip' on K8S sign in page."
+        - "If you have configured 'enable_skip_login=yes', click 'skip' on K8S sign in page."
 #    with_items:
 #      -  "{{groups['masternode']}}"
 

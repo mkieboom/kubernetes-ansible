@@ -57,7 +57,7 @@
 - name: Deploy demo environment settings, not for production environments!
   hosts: k8s_master
   roles:
-    - {role: k8s-install-demo, when: demo_environment == 'yes'}
+    - {role: k8s-install-demo, when: enable_skip_login == 'yes'}
 
 ## Join worker nodes
 - name: Join worker nodes
