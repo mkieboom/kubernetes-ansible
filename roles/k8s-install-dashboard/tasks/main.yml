@@ -7,26 +7,26 @@
       force: yes
 
   # Configure Kubernetes Dashboard yaml
-  - name: Configure Kubernetes Dashboard yaml (/tmp/{{ dashboard_yaml }})
-    blockinfile:
-      path: "/tmp/{{ dashboard_yaml }}"
-      marker: "# {mark} ANSIBLE MANAGED BLOCK"
-      block: |
-        spec:
-          ports:
-            - port: 443
-              targetPort: 8443
-              nodePort: {{ dashboard_service_port }}
-          selector:
-            k8s-app: kubernetes-dashboard
-          type: {{ dashboard_service_type }}
+  # - name: Configure Kubernetes Dashboard yaml (/tmp/{{ dashboard_yaml }})
+  #   blockinfile:
+  #     path: "/tmp/{{ dashboard_yaml }}"
+  #     marker: "# {mark} ANSIBLE MANAGED BLOCK"
+  #     block: |
+  #       spec:
+  #         ports:
+  #           - port: 443
+  #             targetPort: 8443
+  #             nodePort: {{ dashboard_service_port }}
+  #         selector:
+  #           k8s-app: kubernetes-dashboard
+  #         type: {{ dashboard_service_type }}
 
   # Allow skip login on the Dashboard UI page for demo purposes
   - name: Allow skip login on the Dashboard UI page for demo purposes
     lineinfile:
       path: "/tmp/{{ dashboard_yaml }}"
       insertafter: '        args:'
-      line: '          - --enable-skip-login'
+      line: '            - --enable-skip-login'
     when: enable_skip_login == 'yes'
 
   # Install Dashboard
