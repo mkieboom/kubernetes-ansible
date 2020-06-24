@@ -1,0 +1,18 @@
+k8snode03 ansible_host= ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa
+k8snode02 ansible_host= ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa
+k8snode01 ansible_host= ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[all]
+k8snode03
+k8snode02
+k8snode01
+
+[k8s_worker]
+k8snode03
+
+[k8s_worker]
+k8snode02
+
+[k8s_master]
+k8snode01
+

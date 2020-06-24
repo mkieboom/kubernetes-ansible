@@ -2,3 +2,4 @@
 .DS_Store
 vagrant/.vagrant/*
 vagrant/hosts
+vagrant/3node_k8s/.vagrant/*

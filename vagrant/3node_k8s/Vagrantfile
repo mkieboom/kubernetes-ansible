@@ -28,7 +28,7 @@ ansible_extra_vars = {
                         vagrant_deployment: "yes",
                         allow_pods_on_master: "yes",
                         enable_skip_login: "yes",
-                        kubernetes_version: "1.15.0"
+                        kubernetes_version: "1.17.0"
                       }
 
 
@@ -113,35 +113,35 @@ Vagrant.configure(2) do |config|
       # Confogure the machine CPU and memory
       cpu = server[:cpu] ? server[:cpu] : 1;
       memory = server[:ram] ? server[:ram] : 512;
-      config.vm.provider "virtualbox" do |vb|
+      conf.vm.provider "virtualbox" do |vb|
         vb.customize ["modifyvm", :id, "--cpus", cpu.to_s]
         vb.customize ["modifyvm", :id, "--memory", memory.to_s]
         vb.name = server[:hostname] + "_" + server[:bridged_ip]
       end
 
       # Add the private and public key for keyless ssh between the servers
-      config.ssh.private_key_path = ["~/.vagrant.d/insecure_private_key", ssh_key]
-      config.ssh.insert_key = false
-      config.vm.provision "file", source: ssh_key , destination: "~/.ssh/id_rsa"
-      config.vm.provision "file", source: ssh_key + ".pub", destination: "~/.ssh/authorized_keys"
+      conf.ssh.private_key_path = ["~/.vagrant.d/insecure_private_key", ssh_key]
+      conf.ssh.insert_key = false
+      conf.vm.provision "file", source: ssh_key , destination: "~/.ssh/id_rsa"
+      conf.vm.provision "file", source: ssh_key + ".pub", destination: "~/.ssh/authorized_keys"
 
       # Also add my personal public key to the authorized keys file
-      config.vm.provision :shell, inline: "echo #{ssh_public_key} >> ~/.ssh/authorized_keys", privileged: false
+      conf.vm.provision :shell, inline: "echo #{ssh_public_key} >> ~/.ssh/authorized_keys", privileged: false
 
       # Add the private and public key for the root user as well to run ansible as root
-      config.vm.provision "shell", inline: <<-EOF
+      conf.vm.provision "shell", inline: <<-EOF
         sudo mkdir -p /root/.ssh/
         sudo cp /home/vagrant/.ssh/id_rsa /root/.ssh/id_rsa
         sudo cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
       EOF
 
       # Remove 127.0.0.1 <hostname> from /etc/hosts to allow correct IP lookup
-      config.vm.provision :shell, inline: "sed -i'' '/^127.0.0.1\\t#{conf.vm.hostname}\\t#{conf.vm.hostname}$/d' /etc/hosts"
+      conf.vm.provision :shell, inline: "sed -i'' '/^127.0.0.1\\t#{conf.vm.hostname}\\t#{conf.vm.hostname}$/d' /etc/hosts"
 
       # Install some basic tools
       if index == servers.size - 1
         if ansible_playbook != ""
-          config.vm.provision "shell", inline: <<-EOF
+          conf.vm.provision "shell", inline: <<-EOF
             yum install -y epel-release
             yum install -y git ansible clustershell net-tools wget
             git clone #{git_ansible_project}
@@ -151,7 +151,7 @@ Vagrant.configure(2) do |config|
           EOF
 
           # Launch the ansible script
-          config.vm.provision :ansible_local do |ansible|
+          conf.vm.provision :ansible_local do |ansible|
             ansible.inventory_path = "/vagrant/" + ansible_inventory_path
             ansible.verbose = "v"
             ansible.limit = "all"
